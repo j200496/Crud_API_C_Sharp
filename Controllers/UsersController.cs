@@ -20,6 +20,21 @@ namespace Crud_Api.Controllers
         {
             return await _context.Users.ToListAsync();
         }
+
+        [HttpGet("ActiveUser")]
+        public async Task<ActionResult<IEnumerable<UserDto>>> GetActiveUsers()
+        {
+            var activeusers = await _context.Users.Where(u => u.IsActive)
+                .Select(u => new UserDto
+                {
+                    username = u.UserName,
+                    password = u.password,
+                    IsActive = u.IsActive,
+
+                }).ToListAsync();
+            return Ok(activeusers);
+
+        }
         [HttpPost]
         public async Task<ActionResult<Users>> AddUser([FromBody] UserDto dto)
         {
@@ -28,8 +43,8 @@ namespace Crud_Api.Controllers
             var user = new Users
             {
                 UserName = dto.username,
-                password = BCrypt.Net.BCrypt.HashPassword(dto.password) //dto.password  Install-Package BCrypt.Net-Next
-
+                password = BCrypt.Net.BCrypt.HashPassword(dto.password), //dto.password  Install-Package BCrypt.Net-Next
+                
             };
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
@@ -55,6 +70,7 @@ namespace Crud_Api.Controllers
             }
             user.UserName = dto.username;
             user.password = dto.password;
+            user.IsActive = dto.IsActive;
             await _context.SaveChangesAsync();
             return Ok(new { message = "User Updated!" });
 
@@ -62,12 +78,25 @@ namespace Crud_Api.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult>Delete(int id)
         {
-            var deleteusers = await _context.Users.Where(u => u.IdUser == id).ExecuteDeleteAsync();
-            if(deleteusers > 0)
+
+            /* var deleteusers = await _context.Users.Where(u => u.IdUser == id).ExecuteDeleteAsync();
+             if(deleteusers > 0)
+             {
+                 await _context.Users.ToListAsync();
+             }
+             return Ok("User deleted!");
+            Add-Migration AddIsActiveToUser
+            Update-Database
+
+            */
+            var finduser = await _context.Users.FindAsync(id);
+            if(finduser == null)
             {
-                await _context.Users.ToListAsync();
+                return NotFound();
             }
-            return Ok("User deleted!");
+            finduser.IsActive = false;
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "User Deleted" });
         }
     }
 }
