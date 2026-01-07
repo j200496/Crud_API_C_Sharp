@@ -9,6 +9,7 @@ namespace Crud_Api.Models
             
         }
         public DbSet<Users> Users { get; set; }
+        public DbSet<Customers> Customers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

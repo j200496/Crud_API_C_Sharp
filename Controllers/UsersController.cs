@@ -27,10 +27,8 @@ namespace Crud_Api.Controllers
             var activeusers = await _context.Users.Where(u => u.IsActive)
                 .Select(u => new UserDto
                 {
-                    username = u.UserName,
-                    password = u.password,
+                    username = u.UserName,                 
                     IsActive = u.IsActive,
-
                 }).ToListAsync();
             return Ok(activeusers);
 
@@ -60,6 +58,34 @@ namespace Crud_Api.Controllers
             }
             return user;
         }
+        [HttpGet("Search")]
+        public async Task<ActionResult>SearchUser(string username)
+        {
+            var finduser = await _context.Users.Where(u => u.UserName.Contains(username)).ToListAsync();
+           
+            if(finduser == null || finduser.Count == 0)
+            {
+                return Ok(_context.Users.ToListAsync());
+            }
+
+            if (string.IsNullOrEmpty(username))
+            {
+
+                return Ok(_context.Users.ToListAsync());
+            }
+            return Ok(finduser);
+        }
+        [HttpGet("CountUsers")]
+        public async Task<ActionResult<int>> CountUsers()
+        {
+            var count = await _context.Users.CountAsync();
+            if (count == 0 || count < 0)
+            {
+                return NotFound(new {message = "There are no users to count"});
+            }
+            return Ok(count);
+        }
+
         [HttpPut("{id}")]
         public async Task<ActionResult>Edit(int id, [FromBody] UserDto dto)
         {
